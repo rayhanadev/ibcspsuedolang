@@ -87,4 +87,57 @@ impl Interpreter {
             _ => panic!("Unknown expression"),
         }
     }
+
+    pub fn print_ast(&self, node: &AstNode, indent: usize) {
+        let indentation = "  ".repeat(indent);
+        match node {
+            AstNode::Program(statements) => {
+                println!("{}Program", indentation);
+                for statement in statements {
+                    self.print_ast(statement, indent + 1);
+                }
+            }
+            AstNode::Assignment(name, expr) => {
+                println!("{}Assignment: {}", indentation, name);
+                self.print_ast(expr, indent + 1);
+            }
+            AstNode::Output(expr) => {
+                println!("{}Output", indentation);
+                self.print_ast(expr, indent + 1);
+            }
+            AstNode::If(condition, true_branch, false_branch) => {
+                println!("{}If", indentation);
+                self.print_ast(condition, indent + 1);
+                println!("{}  True Branch", indentation);
+                for statement in true_branch {
+                    self.print_ast(statement, indent + 2);
+                }
+                println!("{}  False Branch", indentation);
+                for statement in false_branch {
+                    self.print_ast(statement, indent + 2);
+                }
+            }
+            AstNode::Loop(condition, body) => {
+                println!("{}Loop", indentation);
+                self.print_ast(condition, indent + 1);
+                for statement in body {
+                    self.print_ast(statement, indent + 1);
+                }
+            }
+            AstNode::BinOp(left, op, right) => {
+                println!("{}BinOp: {:?}", indentation, op);
+                self.print_ast(left, indent + 1);
+                self.print_ast(right, indent + 1);
+            }
+            AstNode::Number(value) => {
+                println!("{}Number: {}", indentation, value);
+            }
+            AstNode::String(value) => {
+                println!("{}String: {}", indentation, value);
+            }
+            AstNode::Identifier(name) => {
+                println!("{}Identifier: {}", indentation, name);
+            }
+        }
+    }
 }

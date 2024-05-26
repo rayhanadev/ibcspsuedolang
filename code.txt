@@ -1,0 +1,42 @@
+X = 5
+Y = 10
+output X + Y
+
+if X = 5 then
+    output "X is 5"
+else
+    output "X is not 5"
+endif
+
+if X != 10 then
+    output "X is not 10"
+endif
+
+if Y > 5 then
+    output "Y is greater than 5"
+endif
+
+if Y >= 10 then
+    output "Y is greater than or equal to 10"
+endif
+
+if Y < 15 then
+    output "Y is less than 15"
+endif
+
+if Y <= 10 then
+    output "Y is less than or equal to 10"
+endif
+
+if X != 5 or Y != 10 then
+    output "X is not 5 or Y is not 10"
+endif
+
+if X != 5 and Y != 5 then
+    output "X is not 5 and Y is not 5"
+endif
+
+loop while Y > 0
+    Y = Y - 1
+    output Y
+endloop

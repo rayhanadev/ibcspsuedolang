@@ -74,6 +74,14 @@ impl Interpreter {
                     Token::Slash => left_val / right_val,
                     Token::Mod => left_val % right_val,
                     Token::Assign if self.in_condition => (left_val == right_val) as i64,
+                    Token::Assign => {
+                        if let AstNode::Identifier(name) = &**left {
+                            self.variables.insert(name.clone(), right_val);
+                            right_val
+                        } else {
+                            panic!("Invalid assignment target")
+                        }
+                    }
                     Token::NotEqual => (left_val != right_val) as i64,
                     Token::GreaterThan => (left_val > right_val) as i64,
                     Token::GreaterThanOrEqual => (left_val >= right_val) as i64,

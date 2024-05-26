@@ -4,17 +4,12 @@ use crate::ast::AstNode;
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
     current_token_info: TokenInfo,
-    in_condition: bool,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(mut lexer: Lexer<'a>) -> Self {
         let current_token_info = lexer.get_next_token();
-        Parser {
-            lexer,
-            current_token_info,
-            in_condition: false,
-        }
+        Parser { lexer, current_token_info }
     }
 
     fn eat(&mut self, token: Token) {
@@ -80,9 +75,7 @@ impl<'a> Parser<'a> {
 
     fn if_statement(&mut self) -> AstNode {
         self.eat(Token::If);
-        self.in_condition = true;
         let condition = self.boolean_expr();
-        self.in_condition = false;
         self.eat(Token::Then);
         let mut true_branch = vec![];
 
@@ -109,9 +102,7 @@ impl<'a> Parser<'a> {
     fn loop_statement(&mut self) -> AstNode {
         self.eat(Token::Loop);
         self.eat(Token::While);
-        self.in_condition = true;
         let condition = self.boolean_expr();
-        self.in_condition = false;
         let mut body = vec![];
 
         while self.current_token_info.token != Token::EndLoop {
@@ -124,18 +115,23 @@ impl<'a> Parser<'a> {
     }
 
     fn boolean_expr(&mut self) -> AstNode {
+        let mut node = self.comparison_expr();
+
+        while matches!(self.current_token_info.token, Token::And | Token::Or) {
+            let token = self.current_token_info.token.clone();
+            self.eat(token.clone());
+            node = AstNode::BinOp(Box::new(node), token, Box::new(self.comparison_expr()));
+        }
+
+        node
+    }
+
+    fn comparison_expr(&mut self) -> AstNode {
         let mut node = self.expr();
 
         while matches!(
             self.current_token_info.token,
-            Token::Assign
-                | Token::NotEqual
-                | Token::GreaterThan
-                | Token::GreaterThanOrEqual
-                | Token::LessThan
-                | Token::LessThanOrEqual
-                | Token::And
-                | Token::Or
+            Token::Assign | Token::NotEqual | Token::GreaterThan | Token::GreaterThanOrEqual | Token::LessThan | Token::LessThanOrEqual
         ) {
             let token = self.current_token_info.token.clone();
             self.eat(token.clone());
@@ -148,7 +144,7 @@ impl<'a> Parser<'a> {
     fn expr(&mut self) -> AstNode {
         let mut node = self.term();
 
-        while self.current_token_info.token == Token::Plus || self.current_token_info.token == Token::Minus {
+        while matches!(self.current_token_info.token, Token::Plus | Token::Minus) {
             let token = self.current_token_info.token.clone();
             if token == Token::Plus {
                 self.eat(Token::Plus);
@@ -164,10 +160,7 @@ impl<'a> Parser<'a> {
     fn term(&mut self) -> AstNode {
         let mut node = self.factor();
 
-        while matches!(
-            self.current_token_info.token,
-            Token::Star | Token::Slash | Token::Mod | Token::Div
-        ) {
+        while matches!(self.current_token_info.token, Token::Star | Token::Slash | Token::Mod | Token::Div) {
             let token = self.current_token_info.token.clone();
             match token {
                 Token::Star => self.eat(Token::Star),
